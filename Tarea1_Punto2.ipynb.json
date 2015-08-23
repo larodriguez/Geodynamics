@@ -1,0 +1,245 @@
+{
+ "cells": [
+  {
+   "cell_type": "markdown",
+   "metadata": {},
+   "source": [
+    "# Tarea 1 Geodinamica 201520 - Luis Alejandro Rodríguez Parra \n",
+    "Punto 2: Recall that the Hawaiian Island chain is being formed as the Pacific plate passes over a hotspot. Suppose that Mauna Loa volcano will become extinct when it moves 100 km away from its present location over the hotspot. (a) How long will this take? (b) Eventually, the first of the islands in the chain will hit some type of landmass. Estimate when and where that will happen. "
+   ]
+  },
+  {
+   "cell_type": "markdown",
+   "metadata": {},
+   "source": [
+    "Para resolver el problema primero tenemos que encontrar la velocidad de movimiento de la Placa del Pacifico respecto al hotspot. En este caso vamos a utilizar un polo de Euler Absoluto ubicado en latitud y longitud (- 61.7°, 97.2°) y que cuenta con velocidad angurar 9.67 x 10-7 deg/yr. Tambien utilizamos las cordenadas actuales del volcan Mauna Loa en latitud y longitud (19.46°, -155.59°)."
+   ]
+  },
+  {
+   "cell_type": "code",
+   "execution_count": 137,
+   "metadata": {
+    "collapsed": false
+   },
+   "outputs": [
+    {
+     "name": "stdout",
+     "output_type": "stream",
+     "text": [
+      "Populating the interactive namespace from numpy and matplotlib\n"
+     ]
+    }
+   ],
+   "source": [
+    "%pylab inline\n",
+    "import numpy as np"
+   ]
+  },
+  {
+   "cell_type": "code",
+   "execution_count": 146,
+   "metadata": {
+    "collapsed": false
+   },
+   "outputs": [],
+   "source": [
+    "# Definimos: R = radio de la tierra (cm), la = latitud del punto (º), lo = longitud del punto (º)\n",
+    "# pla = latitud polo (º), plo = longitud polo (º), w = velocidad angular (deg/yr)\n",
+    "R = 6370.8E5\n",
+    "la = 19.46\n",
+    "lo = -155.59\n",
+    "pla = -61.7\n",
+    "plo = 97.2\n",
+    "w = 9.67E-7"
+   ]
+  },
+  {
+   "cell_type": "code",
+   "execution_count": 147,
+   "metadata": {
+    "collapsed": false
+   },
+   "outputs": [],
+   "source": [
+    "#Convertimos las unidades de las cordenadas y la velocidad angular a radianes\n",
+    "DR = pi/180\n",
+    "lar = la*DR\n",
+    "lor = lo*DR\n",
+    "plar = pla*DR\n",
+    "plor = plo*DR\n",
+    "wr = w*DR"
+   ]
+  },
+  {
+   "cell_type": "code",
+   "execution_count": 148,
+   "metadata": {
+    "collapsed": false
+   },
+   "outputs": [],
+   "source": [
+    "#Ya que tenemos las cordenadas en radianes necesitamos converir los datos a cordenadas cartesianes globales\n",
+    "X =  (cos(lar)*cos(lor), cos(lar)*sin(lor), sin(lar))\n",
+    "PX = (cos(plar)*cos(plor)*wr, cos(plar)*sin(plor)*wr, sin(plar)*wr)"
+   ]
+  },
+  {
+   "cell_type": "code",
+   "execution_count": 149,
+   "metadata": {
+    "collapsed": false
+   },
+   "outputs": [
+    {
+     "name": "stdout",
+     "output_type": "stream",
+     "text": [
+      "[-2.00406517  8.34120443  4.59110512]\n"
+     ]
+    }
+   ],
+   "source": [
+    "#Realizamos el producto cruz entre los dos vectores, para obtener la velocidad de movimiento\n",
+    "V = R * cross(PX,X)\n",
+    "print V"
+   ]
+  },
+  {
+   "cell_type": "code",
+   "execution_count": 150,
+   "metadata": {
+    "collapsed": false
+   },
+   "outputs": [
+    {
+     "name": "stdout",
+     "output_type": "stream",
+     "text": [
+      "[[ 0.30336904  0.13767815  0.9428743 ]\n",
+      " [ 0.41326337 -0.91061155  0.        ]\n",
+      " [ 0.85859223  0.38965541 -0.33314869]]\n"
+     ]
+    }
+   ],
+   "source": [
+    "#Definimos la matriz de rotación para convertir las cordenadas globales a cordenadas locales\n",
+    "T = zeros((3,3))\n",
+    "T[0,0] = -sin(lar)*cos(lor)\n",
+    "T[0,1] = -sin(lar)*sin(lor)\n",
+    "T[0,2] = cos(lar)\n",
+    "T[1,0] = -sin(lor)\n",
+    "T[1,1] = cos(lor)\n",
+    "T[1,2] = 0\n",
+    "T[2,0] = -cos(lar)*cos(lor)\n",
+    "T[2,1] = -cos(lar)*sin(lor)\n",
+    "T[2,2] = -sin(lar)\n",
+    "print T"
+   ]
+  },
+  {
+   "cell_type": "code",
+   "execution_count": 159,
+   "metadata": {
+    "collapsed": false
+   },
+   "outputs": [
+    {
+     "name": "stdout",
+     "output_type": "stream",
+     "text": [
+      "[[  4.86926530e+00]\n",
+      " [ -8.42380379e+00]\n",
+      " [  4.44089210e-16]]\n"
+     ]
+    }
+   ],
+   "source": [
+    "#Multiplicamos la matriz de transformación por el vector de velocidad ya encontrado, y obtenemos\n",
+    "#la velocidad VF(Norte,Este,Up)\n",
+    "Vt = np.matrix(V).T\n",
+    "VF = T*Vt\n",
+    "print VF"
+   ]
+  },
+  {
+   "cell_type": "code",
+   "execution_count": 161,
+   "metadata": {
+    "collapsed": false
+   },
+   "outputs": [
+    {
+     "name": "stdout",
+     "output_type": "stream",
+     "text": [
+      "La magnitud de la velocidad es [[ 9.72986201]] Cm/año\n"
+     ]
+    }
+   ],
+   "source": [
+    "#La magnitud de la velocidad es en cm/yr\n",
+    "y = sqrt(VF[0,0]**2 + VF[1]**2 + VF[2]**2)\n",
+    "print \"La magnitud de la velocidad es\", y, \"Cm/año\""
+   ]
+  },
+  {
+   "cell_type": "markdown",
+   "metadata": {},
+   "source": [
+    "Ahora, si ausumimos que la velocidad de movimiento se va a manter constante tanto en magnitud como en dirección, podemos encontrar el tiempo que va atardar el moverse 100km. Es decir asumimos que el movimiento va a ser constante en el tiempo."
+   ]
+  },
+  {
+   "cell_type": "code",
+   "execution_count": 164,
+   "metadata": {
+    "collapsed": false
+   },
+   "outputs": [
+    {
+     "name": "stdout",
+     "output_type": "stream",
+     "text": [
+      "El tiempo que va a tardar Mauna Loa en moverse 100km es: [[ 1027763.80449934]] años\n"
+     ]
+    }
+   ],
+   "source": [
+    "# Encontramos el tiempo que va a tardar en moverse 100km, con la relación t=d/v, ya conocemos la magnitud de la v\n",
+    "d = 100E5\n",
+    "t = d/y\n",
+    "print \"El tiempo que va a tardar Mauna Loa en moverse 100km es:\", t, \"años\""
+   ]
+  },
+  {
+   "cell_type": "code",
+   "execution_count": null,
+   "metadata": {
+    "collapsed": true
+   },
+   "outputs": [],
+   "source": []
+  }
+ ],
+ "metadata": {
+  "kernelspec": {
+   "display_name": "Python 2",
+   "language": "python",
+   "name": "python2"
+  },
+  "language_info": {
+   "codemirror_mode": {
+    "name": "ipython",
+    "version": 2
+   },
+   "file_extension": ".py",
+   "mimetype": "text/x-python",
+   "name": "python",
+   "nbconvert_exporter": "python",
+   "pygments_lexer": "ipython2",
+   "version": "2.7.10"
+  }
+ },
+ "nbformat": 4,
+ "nbformat_minor": 0
+}
